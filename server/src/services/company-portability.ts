@@ -376,8 +376,17 @@ function parseFrontmatterMarkdown(raw: string): MarkdownDoc {
   return { frontmatter, body };
 }
 
+function githubFetchHeaders(): Record<string, string> {
+  const token = process.env.GITHUB_TOKEN;
+  if (!token) return {};
+  return { Authorization: `token ${token}` };
+}
+
 async function fetchJson(url: string) {
-  const response = await fetch(url);
+  const headers = url.includes("raw.githubusercontent.com") || url.includes("api.github.com")
+    ? githubFetchHeaders()
+    : {};
+  const response = await fetch(url, { headers });
   if (!response.ok) {
     throw unprocessable(`Failed to fetch ${url}: ${response.status}`);
   }
@@ -385,7 +394,10 @@ async function fetchJson(url: string) {
 }
 
 async function fetchText(url: string) {
-  const response = await fetch(url);
+  const headers = url.includes("raw.githubusercontent.com") || url.includes("api.github.com")
+    ? githubFetchHeaders()
+    : {};
+  const response = await fetch(url, { headers });
   if (!response.ok) {
     throw unprocessable(`Failed to fetch ${url}: ${response.status}`);
   }
